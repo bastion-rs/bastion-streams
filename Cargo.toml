@@ -1,0 +1,28 @@
+[package]
+name = "bastion-streams"
+version = "0.1.1-alpha.1"
+authors = ["Mahmut Bulut <vertexclique@gmail.com>"]
+edition = "2018"
+license = "Apache-2.0/MIT"
+repository = "https://github.com/bastion-rs/bastion-streams"
+homepage = "https://github.com/bastion-rs/bastion-streams"
+documentation = "https://docs.rs/bastion-streams"
+description = "Reactive stream processing framework"
+keywords = ["async", "stream", "data-processing", "stream-processing", "stream-dsl"]
+categories = ["asynchronous", "concurrency", "network-programming"]
+
+[dependencies]
+futures-preview = "0.3.0-alpha.17"
+pin-utils = "0.1.0-alpha.4"
+slab = "0.4.2"
+streaming-iterator = "0.1.4"
+objekt-clonable = "0.2.2"
+multiqueue = "0.3.2"
+crossbeam-channel = "0.3.9"
+bus = "2.2.2"
+
+# Remove later when executor is in place
+async-std = "0.99"
+
+[dev-dependencies]
+
