@@ -2,11 +2,13 @@
 use crate::stream::stage::prelude::*;
 use crossbeam_channel::{unbounded, Receiver, Sender};
 use futures::io::Error;
+use std::mem::MaybeUninit;
+
 
 pub struct Single<O> {
     pub shape: SourceShape<'static, O>,
 
-    pub elem: O,
+    pub element: O,
 
     pub demand_rx: BroadcastReceiver<Demand>,
     pub demand_tx: BroadcastSender<Demand>,
@@ -14,6 +16,26 @@ pub struct Single<O> {
     pub in_handler: Box<dyn InHandler>,
     pub out_handler: Box<dyn OutHandler>,
     pub logic: GraphStageLogic,
+}
+
+impl<O> Single<O>
+where
+    O: Clone
+{
+    pub fn new(element: O) -> Self {
+        Self {
+            shape: unsafe { MaybeUninit::uninit().assume_init() },
+
+            element,
+
+            demand_rx: unsafe { MaybeUninit::uninit().assume_init() },
+            demand_tx: unsafe { MaybeUninit::uninit().assume_init() },
+
+            in_handler: unsafe { MaybeUninit::uninit().assume_init() },
+            out_handler: unsafe { MaybeUninit::uninit().assume_init() },
+            logic: unsafe { MaybeUninit::uninit().assume_init() },
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -45,7 +67,7 @@ impl<O> OutHandler for SingleHandler<O>
     }
 }
 
-impl<'a, O> GraphStage<'a> for Single<O>
+impl<O> GraphStage for Single<O>
 where
     O: Clone +  'static,
 {
@@ -56,7 +78,7 @@ where
         };
     }
 
-    fn build_demand(&'a mut self, tx: BroadcastSender<Demand>, rx: BroadcastReceiver<Demand>) {
+    fn build_demand(&mut self, tx: BroadcastSender<Demand>, rx: BroadcastReceiver<Demand>) {
         self.demand_tx = tx;
         self.demand_rx = rx;
     }
@@ -67,7 +89,7 @@ where
         let (tx, rx) = unbounded();
 
         self.out_handler = Box::new(SingleHandler {
-            elem: self.elem.clone(),
+            elem: self.element.clone(),
             tx,
             rx,
         });
@@ -80,7 +102,7 @@ where
         gsl
     }
 
-    fn get_shape(&'a self) -> ShapeType {
+    fn get_shape(&self) -> ShapeType {
         let shape: &dyn Shape<NotUsed, O> = &self.shape;
         shape.shape_type()
     }

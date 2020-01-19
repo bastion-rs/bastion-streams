@@ -1,6 +1,7 @@
 use crate::stream::stage::prelude::*;
 use crossbeam_channel::{unbounded, Receiver, Sender};
 use futures::io::Error;
+use std::mem::MaybeUninit;
 
 pub struct Ignore<I> {
     pub shape: SinkShape<'static, I>,
@@ -12,6 +13,25 @@ pub struct Ignore<I> {
     pub in_handler: Box<dyn InHandler>,
     pub out_handler: Box<dyn OutHandler>,
     pub logic: GraphStageLogic,
+}
+
+impl<I> Ignore<I>
+where
+    I: Clone
+{
+    pub fn new() -> Self {
+        Self {
+            shape: unsafe { MaybeUninit::uninit().assume_init() },
+            stage_id: unsafe { MaybeUninit::uninit().assume_init() },
+
+            demand_rx: unsafe { MaybeUninit::uninit().assume_init() },
+            demand_tx: unsafe { MaybeUninit::uninit().assume_init() },
+
+            in_handler: unsafe { MaybeUninit::uninit().assume_init() },
+            out_handler: unsafe { MaybeUninit::uninit().assume_init() },
+            logic: unsafe { MaybeUninit::uninit().assume_init() },
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -56,7 +76,7 @@ impl<I> InHandler for IgnoreHandler<I>
     }
 }
 
-impl<'a, I> GraphStage<'a> for Ignore<I>
+impl<I> GraphStage for Ignore<I>
     where
         I: Clone +  'static,
 {
@@ -67,7 +87,7 @@ impl<'a, I> GraphStage<'a> for Ignore<I>
         };
     }
 
-    fn build_demand(&'a mut self, tx: BroadcastSender<Demand>, rx: BroadcastReceiver<Demand>) {
+    fn build_demand(&mut self, tx: BroadcastSender<Demand>, rx: BroadcastReceiver<Demand>) {
         self.demand_tx = tx;
         self.demand_rx = rx;
     }
@@ -93,7 +113,7 @@ impl<'a, I> GraphStage<'a> for Ignore<I>
         gsl
     }
 
-    fn get_shape(&'a self) -> ShapeType {
+    fn get_shape(&self) -> ShapeType {
         let shape: &dyn Shape<I, NotUsed> = &self.shape;
         shape.shape_type()
     }

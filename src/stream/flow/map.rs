@@ -2,10 +2,15 @@ use crate::stream::stage::prelude::*;
 use crossbeam_channel::{unbounded, Receiver, Sender};
 use futures::io::Error;
 use objekt_clonable::clonable;
+use std::mem::MaybeUninit;
+
 
 #[clonable]
 pub trait MapClosure<I, O>: Fn(I) -> O + Clone + Send + Sync + 'static {}
+impl<I, O, T> MapClosure<I, O> for T where T: Fn(I) -> O + Clone + Send + Sync + 'static {}
+
 type MapFn<I, O> = Box<dyn MapClosure<I, O>>;
+
 
 pub struct Map<I, O> {
     pub shape: FlowShape<'static, I, O>,
@@ -19,6 +24,28 @@ pub struct Map<I, O> {
     pub in_handler: Box<dyn InHandler>,
     pub out_handler: Box<dyn OutHandler>,
     pub logic: GraphStageLogic,
+}
+
+impl<I, O> Map<I, O>
+where
+    I: Clone,
+    O: Clone,
+{
+    pub fn new(map_fn: MapFn<I, O>) -> Self {
+        Self {
+            shape: unsafe { MaybeUninit::uninit().assume_init() },
+            stage_id: unsafe { MaybeUninit::uninit().assume_init() },
+
+            map_fn,
+
+            demand_rx: unsafe { MaybeUninit::uninit().assume_init() },
+            demand_tx: unsafe { MaybeUninit::uninit().assume_init() },
+
+            in_handler: unsafe { MaybeUninit::uninit().assume_init() },
+            out_handler: unsafe { MaybeUninit::uninit().assume_init() },
+            logic: unsafe { MaybeUninit::uninit().assume_init() },
+        }
+    }
 }
 
 ///// Map handler
@@ -111,7 +138,7 @@ impl<I, O> Default for MapHandler<I, O> {
     }
 }
 
-impl<'a, I, O> GraphStage<'a> for Map<I, O>
+impl<I, O> GraphStage for Map<I, O>
 where
     I: Clone + Send + Sync + 'static,
     O: Clone + Send + Sync + 'static,
@@ -126,7 +153,7 @@ where
         };
     }
 
-    fn build_demand(&'a mut self, tx: BroadcastSender<Demand>, rx: BroadcastReceiver<Demand>) {
+    fn build_demand(&mut self, tx: BroadcastSender<Demand>, rx: BroadcastReceiver<Demand>) {
         self.demand_tx = tx;
         self.demand_rx = rx;
     }
@@ -160,7 +187,7 @@ where
         gsl
     }
 
-    fn get_shape(&'a self) -> ShapeType {
+    fn get_shape(&self) -> ShapeType {
         self.shape.shape_type()
     }
 }

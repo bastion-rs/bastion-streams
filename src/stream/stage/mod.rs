@@ -8,7 +8,7 @@ pub mod demand;
 pub mod error;
 
 pub mod prelude {
-    pub use multiqueue::{BroadcastReceiver, BroadcastSender};
+    pub use multiqueue2::{BroadcastReceiver, BroadcastSender};
     pub use super::attributes::*;
     pub use super::graph::*;
     pub use super::handlers::*;

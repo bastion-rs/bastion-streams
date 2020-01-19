@@ -2,19 +2,20 @@ use crate::stream::stage::demand::{Demand};
 
 use crate::stream::stage::graph::GraphStage;
 use crate::stream::stage::shape::ShapeType;
-use multiqueue::{broadcast_queue, BroadcastReceiver, BroadcastSender};
+use multiqueue2::{broadcast_queue, BroadcastReceiver, BroadcastSender};
+use crate::stream::topology::container::Container;
 
-pub struct Architect<'a> {
+pub struct Architect {
     demand_tx: BroadcastSender<Demand>,
     demand_rx: BroadcastReceiver<Demand>,
 
-    stages: Vec<Box<dyn GraphStage<'a>>>
+    stages: Vec<Container>
 }
 
 
-impl<'a> Architect<'a> {
-    pub fn graph(stages: Vec<Box<dyn GraphStage<'static>>>) -> Architect {
-        let stage_count = stages.len();
+impl Architect {
+    pub fn graph(stages: Vec<Container>) -> Architect {
+        let stage_count = stages.len() * 2;
         let (demand_tx, demand_rx) =
             broadcast_queue(stage_count as u64);
 
@@ -29,20 +30,30 @@ impl<'a> Architect<'a> {
         unimplemented!()
     }
 
-    fn check_bounds(&'a self) {
+    pub fn check_bounds(&self) {
         if let Some(root) = self.stages.first() {
-            if root.get_shape() != ShapeType::Source {
-                unimplemented!()
+            use Container::*;
+
+            match root {
+                Transform(_) | Sink(_) => {
+                    panic!("Stage traversal failed. Stream graphs start with a Source.")
+                },
+                _ => ()
             }
         }
     }
 
-    fn visit_stages(&'a mut self) {
+    pub fn visit_stages(&mut self) {
         let tx = self.demand_tx.clone();
         let rx = self.demand_rx.add_stream();
 
         self.stages.iter_mut().for_each(|stage| {
-            stage.build_demand(tx.clone(), rx.clone())
+            use Container::*;
+
+            match stage {
+                Source(s) | Transform(s) | Sink(s) =>
+                    s.build_demand(tx.clone(), rx.clone())
+            }
         });
     }
 }
