@@ -1,10 +1,6 @@
 use futures::io;
 use objekt_clonable::*;
 
-
-
-
-
 //#[clonable]
 //pub trait Handler: Clone {}
 ////impl<T> Handler for T where T: Clone {}
