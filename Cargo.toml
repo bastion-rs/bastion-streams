@@ -17,7 +17,7 @@ pin-utils = "0.1.0-alpha.4"
 slab = "0.4.2"
 streaming-iterator = "0.1.4"
 objekt-clonable = "0.2.2"
-multiqueue = "0.3.2"
+multiqueue2 = "0.1.6"
 crossbeam-channel = "0.3.9"
 bus = "2.2.2"
 

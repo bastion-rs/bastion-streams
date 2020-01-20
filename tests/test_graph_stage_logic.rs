@@ -2,12 +2,11 @@
 mod tests {
     use bastion_streams::stream::stage::graph::GraphStageLogic;
     use bastion_streams::stream::stage::handlers::{InHandler, OutHandler};
-    use bastion_streams::stream::stage::lets::{Outlet};
+    use bastion_streams::stream::stage::lets::Outlet;
     use bastion_streams::stream::stage::shape::SourceShape;
-    
+
     use bastion_streams::stream::stage::types::NotUsed;
     use futures::io::Error;
-    
 
     //        let inlet0 = Inlet::<u64>::new(0, "in0");
     //        let inlet1 = Inlet::<u64>::new(1, "in1");

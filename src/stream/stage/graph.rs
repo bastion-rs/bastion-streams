@@ -1,19 +1,19 @@
-
-
 use crate::stream::stage::attributes::Attributes;
 use crate::stream::stage::handlers::*;
 use crate::stream::stage::lets::{Inlet, Outlet};
 use crate::stream::stage::shape::{Shape, ShapeType};
 
-use crate::stream::stage::demand::{Demand};
-use multiqueue::{BroadcastSender, BroadcastReceiver};
+use crate::stream::stage::demand::Demand;
+use multiqueue2::{BroadcastReceiver, BroadcastSender};
 
-pub trait GraphStage<'a> {
-    fn build_shape(&'a mut self);
-    fn build_demand(&'a mut self, tx: BroadcastSender<Demand>, rx: BroadcastReceiver<Demand>);
-    fn create_logic(&'a mut self, attributes: Attributes) -> GraphStageLogic;
+pub trait GraphStage {
+    fn build_shape(&mut self);
+    fn build_demand(&mut self, tx: BroadcastSender<Demand>, rx: BroadcastReceiver<Demand>);
+    fn create_logic(&mut self, stage_id: usize, attributes: Attributes);
 
-    fn get_shape(&'a self) -> ShapeType;
+    fn get_shape(&self) -> ShapeType;
+    fn get_stage_id(&self) -> usize;
+    fn get_logic(&self) -> &GraphStageLogic;
 }
 
 ///////////////
