@@ -22,7 +22,7 @@ crossbeam-channel = "0.3.9"
 bus = "2.2.2"
 
 # Remove later when executor is in place
-async-std = "0.99"
+async-std = "1.8"
 
 [dev-dependencies]
 
